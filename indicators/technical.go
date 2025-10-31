@@ -2,7 +2,6 @@ package indicators
 
 import (
 	"math"
-
 )
 
 func SMA(prices []float64, period int) float64 {
@@ -32,7 +31,7 @@ func EMA(prices []float64, period int) float64 {
 }
 
 func RSI(prices []float64, period int) float64 {
-	if len(prices) < period+1{
+	if len(prices) < period+1 {
 		return 50.0
 	}
 
@@ -41,7 +40,7 @@ func RSI(prices []float64, period int) float64 {
 
 	for i := len(prices) - period; i < len(prices); i++ {
 		change := prices[i] - prices[i-1]
-		if change > 0{
+		if change > 0 {
 			gains += change
 		} else {
 			losses += -change
@@ -51,7 +50,7 @@ func RSI(prices []float64, period int) float64 {
 	avgGain := gains / float64(period)
 	avgLoss := gains / float64(period)
 
-	if avgLoss == 0{
+	if avgLoss == 0 {
 		return 100.0
 	}
 
@@ -61,29 +60,29 @@ func RSI(prices []float64, period int) float64 {
 }
 
 func ATR(highs, lows, closes []float64, period int) float64 {
-	if len(highs) < period+1 || len(lows) < period+1 || len(closes) < period+1{
+	if len(highs) < period+1 || len(lows) < period+1 || len(closes) < period+1 {
 		return 0
 	}
 
 	trueRanges := make([]float64, 0)
 
-	for i := 1; i < len(closes); i++{
-		highLow:= highs[i] - lows[i]
-		highClose :=  math.Abs(highs[i]- closes[i-1])
-		lowClose := math.Abs(lows[i]- closes[i-1])
+	for i := 1; i < len(closes); i++ {
+		highLow := highs[i] - lows[i]
+		highClose := math.Abs(highs[i] - closes[i-1])
+		lowClose := math.Abs(lows[i] - closes[i-1])
 
 		tr := math.Max(highLow, math.Max(highClose, lowClose))
 		trueRanges = append(trueRanges, tr)
 
 	}
-		return SMA(trueRanges, period)
+	return SMA(trueRanges, period)
 }
 
-func MACD(prices []float64, fastPeriod, slowPeriod, signalPeriod int) (macd, signal, histogram float64)  {
-	if len(prices) < slowPeriod{
+func MACD(prices []float64, fastPeriod, slowPeriod, signalPeriod int) (macd, signal, histogram float64) {
+	if len(prices) < slowPeriod {
 		return 0, 0, 0
 	}
-	
+
 	fastEMA := EMA(prices, fastPeriod)
 	slowEMA := EMA(prices, slowPeriod)
 	macd = fastEMA - slowEMA
@@ -94,16 +93,15 @@ func MACD(prices []float64, fastPeriod, slowPeriod, signalPeriod int) (macd, sig
 	return macd, signal, histogram
 }
 
-func BollingerBands(prices []float64, period int, stdDev float64) (middle, upper, lower float64)  {
-	if len(prices) < period{
+func BollingerBands(prices []float64, period int, stdDev float64) (middle, upper, lower float64) {
+	if len(prices) < period {
 		return 0, 0, 0
 	}
-
 
 	middle = SMA(prices, period)
 
 	variance := 0.0
-	for i :=len(prices) - period; i < len(prices); i++{
+	for i := len(prices) - period; i < len(prices); i++ {
 		diff := prices[i] - middle
 		variance += diff * diff
 	}
@@ -115,19 +113,19 @@ func BollingerBands(prices []float64, period int, stdDev float64) (middle, upper
 	return middle, upper, lower
 }
 
-func StdDev(prices []float64) float64  {
+func StdDev(prices []float64) float64 {
 	if len(prices) == 0 {
 		return 0
 	}
 
 	mean := 0.0
-	for _, p := range prices{
+	for _, p := range prices {
 		mean += p
 	}
 	mean /= float64(len(prices))
 
 	variance := 0.0
-	for _, p := range prices{
+	for _, p := range prices {
 		diff := p - mean
 		variance += diff * diff
 	}
@@ -142,7 +140,6 @@ func PercentChange(oldPrice, newPrice float64) float64 {
 	}
 	return ((newPrice - oldPrice) / oldPrice) * 100
 }
-
 
 func Volatility(prices []float64, period int) float64 {
 	if len(prices) < period {
