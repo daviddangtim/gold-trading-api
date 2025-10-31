@@ -3,7 +3,6 @@ package models
 import (
 	"sync"
 	"time"
-
 )
 
 type GoldPriceResponse struct {
@@ -32,44 +31,44 @@ type GoldPriceResponse struct {
 	PriceGram10k   float64 `json:"price_gram_10k"`
 }
 
-type PricePoint struct{
-	Price float64
+type PricePoint struct {
+	Price     float64
 	Timestamp time.Time
-	High float64
-	Low float64
-	Volume float64
+	High      float64
+	Low       float64
+	Volume    float64
 }
 
-type PriceHistory struct{
-	Points []PricePoint
+type PriceHistory struct {
+	Points  []PricePoint
 	MaxSize int
-	mu sync.RWMutex
+	mu      sync.RWMutex
 }
 
-func NewPriceHistory(maxSize int) *PriceHistory{
+func NewPriceHistory(maxSize int) *PriceHistory {
 	return &PriceHistory{
-		Points: make([]PricePoint, 0, maxSize),
+		Points:  make([]PricePoint, 0, maxSize),
 		MaxSize: maxSize,
 	}
 }
 
-func  (ph *PriceHistory) Add(point PricePoint)  {
+func (ph *PriceHistory) Add(point PricePoint) {
 	ph.mu.Lock()
 	defer ph.mu.Unlock()
 
 	ph.Points = append(ph.Points, point)
 
-	if len(ph.Points) > ph.MaxSize{
+	if len(ph.Points) > ph.MaxSize {
 		ph.Points = ph.Points[1:]
 	}
 }
 
-func (ph *PriceHistory) GetLast(n int)  []PricePoint {
+func (ph *PriceHistory) GetLast(n int) []PricePoint {
 	ph.mu.RLock()
 	defer ph.mu.RUnlock()
 
 	if n > len(ph.Points) {
-		n =  len(ph.Points)
+		n = len(ph.Points)
 	}
 
 	result := make([]PricePoint, n)
@@ -77,9 +76,9 @@ func (ph *PriceHistory) GetLast(n int)  []PricePoint {
 	return result
 }
 
-func (ph *PriceHistory)GetPrices(n int) []float64 {
+func (ph *PriceHistory) GetPrices(n int) []float64 {
 	points := ph.GetLast(n)
-	prices:= make([]float64, len(points))
+	prices := make([]float64, len(points))
 	for i, p := range points {
 		prices[i] = p.Price
 	}
@@ -95,4 +94,3 @@ func (ph *PriceHistory) Latest() (PricePoint, bool) {
 	}
 	return ph.Points[len(ph.Points)-1], true
 }
-

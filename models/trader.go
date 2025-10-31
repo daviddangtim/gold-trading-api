@@ -8,9 +8,9 @@ import (
 type Position string
 
 const (
-	PositionNone Position= "NONE"
-	PositionLong Position= "LONG"
-	PositionShort Position= "SHORT"
+	PositionNone  Position = "NONE"
+	PositionLong  Position = "LONG"
+	PositionShort Position = "SHORT"
 )
 
 type Trade struct {
@@ -42,21 +42,21 @@ type Trader struct {
 
 func NewTrader(initialBalance float64) *Trader {
 	return &Trader{
-		Position: PositionNone,
+		Position:       PositionNone,
 		AccountBalance: initialBalance,
 	}
 }
 
-func (t *Trader) UpdatePrice(price float64)  {
+func (t *Trader) UpdatePrice(price float64) {
 	t.mu.Lock()
 	defer t.mu.Unlock()
 
 	t.LastPrice = price
-	t.Timestamp =  time.Now().Unix()
+	t.Timestamp = time.Now().Unix()
 
-	if t.Position == PositionLong{
+	if t.Position == PositionLong {
 		t.CurrentPnL = price - t.EntryPrice
-	} else if t.Position == PositionShort{
+	} else if t.Position == PositionShort {
 		t.CurrentPnL = t.EntryPrice - price
 	} else {
 		t.CurrentPnL = 0
@@ -67,14 +67,14 @@ func (t *Trader) ClosePosition(price float64) *Trade {
 	t.mu.Lock()
 	defer t.mu.Unlock()
 
-	if t.Position == PositionNone{
+	if t.Position == PositionNone {
 		return nil
 	}
 
 	var profitLoss float64
-	if t.Position == PositionLong{
+	if t.Position == PositionLong {
 		profitLoss = price - t.EntryPrice
-	} else if t.Position == PositionShort{
+	} else if t.Position == PositionShort {
 		profitLoss = t.EntryPrice - price
 	}
 
@@ -93,7 +93,7 @@ func (t *Trader) ClosePosition(price float64) *Trade {
 	t.TotalPnL += profitLoss
 	t.AccountBalance += profitLoss
 	t.TradeCount++
-	if profitLoss > 0{
+	if profitLoss > 0 {
 		t.WinCount++
 	} else {
 		t.LossCount++
@@ -106,13 +106,13 @@ func (t *Trader) ClosePosition(price float64) *Trade {
 	return trade
 }
 
-func (t *Trader)GetState() map[string]interface{} {
+func (t *Trader) GetState() map[string]interface{} {
 	t.mu.RLock()
 	defer t.mu.RUnlock()
 
-	winRate := 0.0 
-	if t.TradeCount > 0{
-		winRate = float64(t.WinCount) / float64(t.TradeCount * 100)
+	winRate := 0.0
+	if t.TradeCount > 0 {
+		winRate = float64(t.WinCount) / float64(t.TradeCount*100)
 	}
 
 	return map[string]interface{}{
@@ -130,7 +130,7 @@ func (t *Trader)GetState() map[string]interface{} {
 	}
 }
 
-func (t *Trader)IsInPosition() bool {
+func (t *Trader) IsInPosition() bool {
 	t.mu.RLock()
 	defer t.mu.RUnlock()
 	return t.Position != PositionNone
