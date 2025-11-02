@@ -5,6 +5,7 @@ import (
 	"time"
 )
 
+// GoldPriceResponse represents the API response from GoldAPI
 type GoldPriceResponse struct {
 	Timestamp      int64   `json:"timestamp"`
 	Metal          string  `json:"metal"`
@@ -31,6 +32,7 @@ type GoldPriceResponse struct {
 	PriceGram10k   float64 `json:"price_gram_10k"`
 }
 
+// PricePoint represents a single price observation
 type PricePoint struct {
 	Price     float64
 	Timestamp time.Time
@@ -39,12 +41,14 @@ type PricePoint struct {
 	Volume    float64
 }
 
+// PriceHistory stores historical price data for technical analysis
 type PriceHistory struct {
-	Points  []PricePoint
-	MaxSize int
-	mu      sync.RWMutex
+	Points    []PricePoint
+	MaxSize   int
+	mu        sync.RWMutex
 }
 
+// NewPriceHistory creates a new price history with specified capacity
 func NewPriceHistory(maxSize int) *PriceHistory {
 	return &PriceHistory{
 		Points:  make([]PricePoint, 0, maxSize),
@@ -52,17 +56,20 @@ func NewPriceHistory(maxSize int) *PriceHistory {
 	}
 }
 
+// Add adds a new price point to history (thread-safe)
 func (ph *PriceHistory) Add(point PricePoint) {
 	ph.mu.Lock()
 	defer ph.mu.Unlock()
 
 	ph.Points = append(ph.Points, point)
-
+	
+	// Keep only last MaxSize points
 	if len(ph.Points) > ph.MaxSize {
 		ph.Points = ph.Points[1:]
 	}
 }
 
+// GetLast returns the last n price points (thread-safe)
 func (ph *PriceHistory) GetLast(n int) []PricePoint {
 	ph.mu.RLock()
 	defer ph.mu.RUnlock()
@@ -70,12 +77,13 @@ func (ph *PriceHistory) GetLast(n int) []PricePoint {
 	if n > len(ph.Points) {
 		n = len(ph.Points)
 	}
-
+	
 	result := make([]PricePoint, n)
 	copy(result, ph.Points[len(ph.Points)-n:])
 	return result
 }
 
+// GetPrices returns just the price values for calculations
 func (ph *PriceHistory) GetPrices(n int) []float64 {
 	points := ph.GetLast(n)
 	prices := make([]float64, len(points))
@@ -85,10 +93,23 @@ func (ph *PriceHistory) GetPrices(n int) []float64 {
 	return prices
 }
 
-func (ph *PriceHistory) Latest() (PricePoint, bool) {
-	ph.mu.Lock()
+// Size returns current number of points stored
+func (ph *PriceHistory) Size() int {
+	ph.mu.RLock()
 	defer ph.mu.RUnlock()
+	return len(ph.Points)
+}
 
+// MaxSize returns the maximum capacity
+// func (ph *PriceHistory) MaxSize() int {
+// 	return ph.MaxSize
+// }
+
+// Latest returns the most recent price point
+func (ph *PriceHistory) Latest() (PricePoint, bool) {
+	ph.mu.RLock()
+	defer ph.mu.RUnlock()
+	
 	if len(ph.Points) == 0 {
 		return PricePoint{}, false
 	}
